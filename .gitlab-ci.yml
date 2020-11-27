@@ -1,0 +1,42 @@
+# Simple gitlab pipeline to understand the workflow of pipeline
+
+# the order in which pipeline should be executed
+# If you do not define anything in the stages everything will go inside Test Stage
+stages:
+  - build
+  - test
+  - deploy
+
+# In Gitlab every job runs in docker container, for those container you can define the image for the same
+# this will be the global image for the stage
+# by default ruby image is used for spawning container
+image: alpine
+
+# The first stage basically has the completed product which you want to test
+build:
+  # will be tagged to build stage so will be the first one to be execute, there is .pre stage as well
+  # which if you define or not define will be the first one to be executed
+  stage: build
+  script:
+    - touch testfile.txt
+    - echo "This is a test file" >> testfile.txt
+  # each container after the job gets destroyed only leaving the job logs
+  # if you want to use files or folders created in next stage we need to store it in artifacts which
+  # has its own location different from the gitlab server repo
+  artifacts:
+    paths:
+    - testfile.txt
+
+test:
+  # The second stage where we will test the product
+  # ubuntu image will override the global image alphine
+  image: ubuntu
+  stage: test
+  script:
+    # we are able to use test/a.txt bcz of saving that file in artifacts
+    - cat testfile.txt
+
+deploy:
+  stage: deploy
+  script:
+    - echo "The deployment is done"
